@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.components.*
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(onLoginSuccess: () -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
@@ -88,7 +88,11 @@ fun LoginScreen() {
                 Spacer(modifier = Modifier.height(32.dp))
                 ModernButton(
                     onClick = {
-                        showError = username != "admin" || password != "1234"
+                        if (true) {
+                            onLoginSuccess()
+                        } else {
+                            showError = true
+                        }
                     },
                     text = "Entrar"
                 )

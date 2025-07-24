@@ -1,0 +1,198 @@
+package com.example.myapplication.screens
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+data class TodoItem(val id: Int, val text: String, val done: Boolean = false)
+
+@Composable
+fun TodoScreen() {
+    var todos by remember { mutableStateOf(listOf<TodoItem>()) }
+    var input by remember { mutableStateOf(TextFieldValue("")) }
+    var nextId by remember { mutableStateOf(0) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color(0xFF667eea), Color(0xFF764ba2))
+                )
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 32.dp)
+        ) {
+            Text(
+                text = "Minha Lista de Tarefas",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "Organize seu dia com estilo ✨",
+                fontSize = 16.sp,
+                color = Color(0xFFE0E7FF),
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+
+            // Campo de adicionar tarefa
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .shadow(4.dp, RoundedCornerShape(16.dp))
+                    .background(Color.White, RoundedCornerShape(16.dp))
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                TextField(
+                    value = input,
+                    onValueChange = { input = it },
+                    placeholder = { Text("Nova tarefa...") },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = Color(0xFF667eea)
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(vertical = 4.dp),
+                    singleLine = true
+                )
+                IconButton(
+                    onClick = {
+                        val text = input.text.trim()
+                        if (text.isNotEmpty()) {
+                            todos = todos + TodoItem(nextId, text)
+                            nextId++
+                            input = TextFieldValue("")
+                        }
+                    },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .padding(start = 4.dp)
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                listOf(Color(0xFF667eea), Color(0xFF764ba2))
+                            ),
+                            shape = CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Adicionar",
+                        tint = Color.White
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Lista de tarefas
+            LazyColumn(
+                modifier = Modifier.weight(1f)
+            ) {
+                items(todos, key = { it.id }) { todo ->
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        TodoCard(
+                            todo = todo,
+                            onToggle = {
+                                todos = todos.map {
+                                    if (it.id == todo.id) it.copy(done = !it.done) else it
+                                }
+                            },
+                            onDelete = {
+                                todos = todos.filter { it.id != todo.id }
+                            }
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TodoCard(
+    todo: TodoItem,
+    onToggle: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        shadowElevation = 8.dp,
+        color = if (todo.done) Color(0xFFE0E7FF) else Color.White,
+        modifier = Modifier.fillMaxWidth() // Removido .animateItemPlacement()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            IconButton(
+                onClick = onToggle,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = if (todo.done) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                    contentDescription = if (todo.done) "Desmarcar" else "Marcar como feito",
+                    tint = if (todo.done) Color(0xFF667eea) else Color(0xFF9CA3AF),
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Text(
+                text = todo.text,
+                fontSize = 18.sp,
+                color = if (todo.done) Color(0xFF667eea) else Color(0xFF1A1A1A),
+                fontWeight = if (todo.done) FontWeight.Medium else FontWeight.Normal,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp)
+            )
+            AnimatedVisibility(visible = todo.done) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Remover",
+                        tint = Color(0xFFDC2626),
+                    )
+                }
+            }
+        }
+    }
+}
