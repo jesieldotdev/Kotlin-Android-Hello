@@ -16,17 +16,23 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color // Mantenha esta importação
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+// Importe suas cores personalizadas
+import com.example.myapplication.ui.theme.* // Ajuste o pacote se necessário
 
 data class TodoItem(val id: Int, val text: String, val done: Boolean = false)
+
+
 
 @Composable
 fun TodoScreen() {
@@ -39,7 +45,7 @@ fun TodoScreen() {
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF667eea), Color(0xFF764ba2))
+                    colors = listOf(BackgroundStart, BackgroundEnd) // Usando variáveis
                 )
             )
     ) {
@@ -52,13 +58,13 @@ fun TodoScreen() {
                 text = "Minha Lista de Tarefas",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = TextPrimary, // Usando variável
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
                 text = "Organize seu dia com estilo ✨",
                 fontSize = 16.sp,
-                color = Color(0xFFE0E7FF),
+                color = TextSecondary, // Usando variável
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
@@ -67,7 +73,7 @@ fun TodoScreen() {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .shadow(4.dp, RoundedCornerShape(16.dp))
-                    .background(Color.White, RoundedCornerShape(16.dp))
+                    .background(TodoCardBackground, RoundedCornerShape(16.dp)) // Usando variável
                     .padding(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 TextField(
@@ -79,7 +85,7 @@ fun TodoScreen() {
                         unfocusedContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = Color(0xFF667eea)
+                        cursorColor = CursorColor // Usando variável
                     ),
                     modifier = Modifier
                         .weight(1f)
@@ -100,7 +106,7 @@ fun TodoScreen() {
                         .padding(start = 4.dp)
                         .background(
                             brush = Brush.horizontalGradient(
-                                listOf(Color(0xFF667eea), Color(0xFF764ba2))
+                                listOf(PurpleBlue, LightPurple) // Usando variáveis
                             ),
                             shape = CircleShape
                         )
@@ -108,7 +114,7 @@ fun TodoScreen() {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Adicionar",
-                        tint = Color.White
+                        tint = Color.White // Poderia ser uma variável TextOnPrimaryButton por exemplo
                     )
                 }
             }
@@ -153,8 +159,8 @@ fun TodoCard(
     Surface(
         shape = RoundedCornerShape(16.dp),
         shadowElevation = 8.dp,
-        color = if (todo.done) Color(0xFFE0E7FF) else Color.White,
-        modifier = Modifier.fillMaxWidth() // Removido .animateItemPlacement()
+        color = if (todo.done) TodoCardDoneBackground else TodoCardBackground, // Usando variáveis
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -168,14 +174,14 @@ fun TodoCard(
                 Icon(
                     imageVector = if (todo.done) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                     contentDescription = if (todo.done) "Desmarcar" else "Marcar como feito",
-                    tint = if (todo.done) Color(0xFF667eea) else Color(0xFF9CA3AF),
+                    tint = if (todo.done) IconDoneColor else IconColor, // Usando variáveis
                     modifier = Modifier.size(28.dp)
                 )
             }
             Text(
                 text = todo.text,
                 fontSize = 18.sp,
-                color = if (todo.done) Color(0xFF667eea) else Color(0xFF1A1A1A),
+                color = if (todo.done) TodoDoneText else TodoText, // Usando variáveis
                 fontWeight = if (todo.done) FontWeight.Medium else FontWeight.Normal,
                 modifier = Modifier
                     .weight(1f)
@@ -189,7 +195,7 @@ fun TodoCard(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Remover",
-                        tint = Color(0xFFDC2626),
+                        tint = DeleteIconColor, // Usando variável
                     )
                 }
             }
