@@ -1,5 +1,4 @@
 package com.example.myapplication.screens
-import java.time.LocalTime
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -22,15 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color // Mantenha esta importação
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.AppNav
-// Importe suas cores personalizadas
-import com.example.myapplication.ui.theme.* // Ajuste o pacote se necessário
 import java.time.LocalDate
 
 data class TodoItem(val id: Int, val text: String, val done: Boolean = false)
