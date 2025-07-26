@@ -1,5 +1,5 @@
 package com.example.myapplication.screens
-
+import java.time.LocalTime
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.AppNav
 // Importe suas cores personalizadas
 import com.example.myapplication.ui.theme.* // Ajuste o pacote se necessário
+import java.time.LocalDate
 
 data class TodoItem(val id: Int, val text: String, val done: Boolean = false)
 
@@ -64,7 +65,7 @@ fun TodoScreen() {
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
-                text = "25 de jul",
+                text = getDate(),
                 fontSize = 16.sp,
                 color = TextSecondary, // Usando variável
                 modifier = Modifier.padding(bottom = 24.dp)
@@ -205,6 +206,14 @@ fun TodoCard(
     }
 }
 
+
+fun getDate():String{
+    val today = LocalDate.now()
+    val day = today.dayOfMonth
+    val month = today.month
+
+    return "$day $month"
+}
 
 @Preview
 @Composable
