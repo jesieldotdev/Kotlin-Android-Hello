@@ -64,7 +64,7 @@ fun TodoScreen() {
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
-                text = "25 jul",
+                text = "25 de jul",
                 fontSize = 16.sp,
                 color = TextSecondary, // Usando variável
                 modifier = Modifier.padding(bottom = 24.dp)
