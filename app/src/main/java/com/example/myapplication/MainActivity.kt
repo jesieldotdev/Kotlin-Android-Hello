@@ -4,45 +4,35 @@ import DataStoreManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.example.myapplication.screens.LoginScreen
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import com.example.myapplication.screens.TodoScreen
+import com.example.myapplication.ui.theme.MyCustomTheme
 
 class MainActivity : ComponentActivity() {
+
     private lateinit var dataStoreManager: DataStoreManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         dataStoreManager = DataStoreManager(applicationContext)
+
         setContent {
-            MaterialTheme {
-                AppNav(dataStoreManager=dataStoreManager)
+            val isDarkMode by dataStoreManager.isDarkModeFlow.collectAsState(initial = false)
+
+            MyCustomTheme(darkTheme = isDarkMode) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    TodoScreen(dataStoreManager = dataStoreManager)
+                }
             }
         }
     }
 }
-
-@Composable
-fun AppNav(dataStoreManager: DataStoreManager) {
-    val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "todo") {
-        composable("login") {
-            LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate("todo") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                }
-            )
-        }
-        composable("todo") {
-            TodoScreen(dataStoreManager)
-        }
-    }
-}
-

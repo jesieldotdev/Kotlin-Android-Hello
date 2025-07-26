@@ -1,53 +1,59 @@
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.myapplication.screens.TodoItem
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.builtins.ListSerializer
+import java.io.IOException
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+val Context.todoDataStore: DataStore<Preferences> by preferencesDataStore(name = "todo_prefs")
+
+
+
 
 class DataStoreManager(private val context: Context) {
+
     companion object {
-        val TODOS_KEY = stringPreferencesKey("todos_list")
-        val USERNAME_KEY = stringPreferencesKey("username")
+        private val TODOS_KEY = stringPreferencesKey("todos_list")
+        val IS_DARK_MODE_KEY = booleanPreferencesKey("is_dark_mode")
     }
 
-    val todosFlow: Flow<List<TodoItem>> = context.dataStore.data
-        .map { preferences ->
-            val todosString = preferences[TODOS_KEY]
-            if (todosString != null) {
-                try {
-                    Json.decodeFromString(ListSerializer(TodoItem.serializer()), todosString)
-                } catch (e: Exception) {
-                    emptyList()
-                }
+    val todosFlow: Flow<List<TodoItem>> = context.todoDataStore.data
+        .catch { exception ->
+            if (exception is IOException) {
+                emit(emptyPreferences())
             } else {
-                emptyList()
+                throw exception
             }
+        }
+        .map { preferences ->
+            val jsonString = preferences[TODOS_KEY] ?: "[]"
+            Json.decodeFromString<List<TodoItem>>(jsonString)
         }
 
     suspend fun saveTodos(todos: List<TodoItem>) {
-        context.dataStore.edit { settings ->
-            val todosString = Json.encodeToString(ListSerializer(TodoItem.serializer()), todos)
-            settings[TODOS_KEY] = todosString
+        context.todoDataStore.edit { preferences ->
+            preferences[TODOS_KEY] = Json.encodeToString(todos)
         }
     }
 
-    val usernameFlow: Flow<String> = context.dataStore.data
+    val isDarkModeFlow: Flow<Boolean> = context.themeDataStore.data
         .map { preferences ->
-            preferences[USERNAME_KEY] ?: ""
+            preferences[IS_DARK_MODE_KEY] ?: false
         }
 
-    suspend fun saveUsername(username: String) {
-        context.dataStore.edit { settings ->
-            settings[USERNAME_KEY] = username
+    suspend fun toggleDarkMode(isDark: Boolean) {
+        context.themeDataStore.edit { preferences ->
+            preferences[IS_DARK_MODE_KEY] = isDark
         }
+    }
+
+    suspend fun isDarkModeInitialValue(): Boolean {
+        return context.themeDataStore.data.first()[IS_DARK_MODE_KEY] ?: false
     }
 }
