@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.AppNav
+import com.example.myapplication.ui.theme.*
 import java.time.LocalDate
 
 data class TodoItem(val id: Int, val text: String, val done: Boolean = false)
