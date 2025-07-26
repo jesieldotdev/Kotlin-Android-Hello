@@ -25,8 +25,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color // Mantenha esta importação
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.AppNav
 // Importe suas cores personalizadas
 import com.example.myapplication.ui.theme.* // Ajuste o pacote se necessário
 
@@ -55,14 +57,14 @@ fun TodoScreen() {
                 .padding(horizontal = 24.dp, vertical = 32.dp)
         ) {
             Text(
-                text = "Minha Lista de Tarefas",
+                text = "TO-DO",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary, // Usando variável
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
-                text = "Organize seu dia com estilo ✨",
+                text = "25 jul",
                 fontSize = 16.sp,
                 color = TextSecondary, // Usando variável
                 modifier = Modifier.padding(bottom = 24.dp)
@@ -200,5 +202,14 @@ fun TodoCard(
                 }
             }
         }
+    }
+}
+
+
+@Preview
+@Composable
+fun AppPreview() {
+    MaterialTheme {
+        TodoScreen()
     }
 }
