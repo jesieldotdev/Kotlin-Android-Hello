@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.AppNav
 import com.example.myapplication.ui.theme.*
 import java.time.LocalDate
+import kotlin.collections.plus
 
 data class TodoItem(val id: Int, val text: String, val done: Boolean = false)
 
@@ -69,7 +70,7 @@ fun TodoScreen() {
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            // Campo de adicionar tarefa
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -95,19 +96,17 @@ fun TodoScreen() {
                 )
                 IconButton(
                     onClick = {
-                        val text = input.text.trim()
-                        if (text.isNotEmpty()) {
-                            todos = todos + TodoItem(nextId, text)
-                            nextId++
-                            input = TextFieldValue("")
-                        }
+                        addTodo(text=input.text.trim(), todos= todos, nextId=nextId, onTodosChange = {todos = it},
+                            onInputChange = {input = it}, onNextIdChange = {nextId = it}
+                            )
+
                     },
                     modifier = Modifier
                         .size(48.dp)
                         .padding(start = 4.dp)
                         .background(
                             brush = Brush.horizontalGradient(
-                                listOf(PurpleBlue, LightPurple) // Usando variáveis
+                                listOf(PurpleBlue, LightPurple)
                             ),
                             shape = CircleShape
                         )
@@ -202,6 +201,28 @@ fun TodoCard(
             }
         }
     }
+}
+
+fun addTodo(
+    text: String,
+    nextId: Int,
+    todos: List<TodoItem>,
+    onTodosChange: (List<TodoItem>) -> Unit,
+    onNextIdChange: (Int) -> Unit,
+    onInputChange: (TextFieldValue) -> Unit
+    ):Unit{
+    println(todos)
+    if(text.isNotEmpty()){
+        onTodosChange(todos + TodoItem(nextId, text))
+        onNextIdChange(nextId + 1)
+        onInputChange(TextFieldValue(""))
+
+    }
+//    if (text.isNotEmpty()) {
+//        todos = todos + TodoItem(nextId, text)
+//        nextId++
+//        input = TextFieldValue("")
+//    }
 }
 
 
