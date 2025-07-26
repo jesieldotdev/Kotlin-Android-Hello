@@ -1,4 +1,6 @@
 package com.example.myapplication.screens
+
+import DataStoreManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -15,8 +17,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -24,30 +24,42 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.AppNav
 import com.example.myapplication.ui.theme.*
+import kotlinx.serialization.Serializable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.time.LocalDate
-import kotlin.collections.plus
+import java.time.format.TextStyle
+import java.util.*
 
+@Serializable
 data class TodoItem(val id: Int, val text: String, val done: Boolean = false)
 
-
-
 @Composable
-fun TodoScreen() {
+fun TodoScreen(dataStoreManager: DataStoreManager) {
     var todos by remember { mutableStateOf(listOf<TodoItem>()) }
     var input by remember { mutableStateOf(TextFieldValue("")) }
     var nextId by remember { mutableStateOf(0) }
+    val scope = rememberCoroutineScope()
+
+    val savedTodos by dataStoreManager.todosFlow.collectAsState(initial = emptyList())
+
+    // Sincronizar com dados salvos
+    LaunchedEffect(savedTodos) {
+        if (savedTodos.isNotEmpty()) {
+            todos = savedTodos
+            nextId = (savedTodos.maxOfOrNull { it.id } ?: -1) + 1
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(BackgroundStart, BackgroundEnd) // Usando variáveis
+                    colors = listOf(BackgroundStart, BackgroundEnd)
                 )
             )
     ) {
@@ -60,22 +72,21 @@ fun TodoScreen() {
                 text = "TO-DO",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary, // Usando variável
+                color = TextPrimary,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
                 text = getDate(),
                 fontSize = 16.sp,
-                color = TextSecondary, // Usando variável
+                color = TextSecondary,
                 modifier = Modifier.padding(bottom = 24.dp)
             )
-
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .shadow(4.dp, RoundedCornerShape(16.dp))
-                    .background(TodoCardBackground, RoundedCornerShape(16.dp)) // Usando variável
+                    .background(TodoCardBackground, RoundedCornerShape(16.dp))
                     .padding(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 TextField(
@@ -87,7 +98,7 @@ fun TodoScreen() {
                         unfocusedContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = CursorColor // Usando variável
+                        cursorColor = CursorColor
                     ),
                     modifier = Modifier
                         .weight(1f)
@@ -96,10 +107,16 @@ fun TodoScreen() {
                 )
                 IconButton(
                     onClick = {
-                        addTodo(text=input.text.trim(), todos= todos, nextId=nextId, onTodosChange = {todos = it},
-                            onInputChange = {input = it}, onNextIdChange = {nextId = it}
-                            )
-
+                        addTodo(
+                            text = input.text.trim(),
+                            currentTodos = todos,
+                            nextIdToUse = nextId,
+                            onTodosChange = { todos = it },
+                            onInputChange = { input = it },
+                            onNextIdChange = { nextId = it },
+                            dataStoreManager = dataStoreManager,
+                            scope = scope
+                        )
                     },
                     modifier = Modifier
                         .size(48.dp)
@@ -107,21 +124,19 @@ fun TodoScreen() {
                         .background(
                             brush = Brush.horizontalGradient(
                                 listOf(PurpleBlue, LightPurple)
-                            ),
-                            shape = CircleShape
+                            ), shape = CircleShape
                         )
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Adicionar",
-                        tint = Color.White // Poderia ser uma variável TextOnPrimaryButton por exemplo
+                        tint = Color.White
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Lista de tarefas
             LazyColumn(
                 modifier = Modifier.weight(1f)
             ) {
@@ -134,12 +149,20 @@ fun TodoScreen() {
                         TodoCard(
                             todo = todo,
                             onToggle = {
-                                todos = todos.map {
+                                val updatedTodos = todos.map {
                                     if (it.id == todo.id) it.copy(done = !it.done) else it
+                                }
+                                todos = updatedTodos
+                                scope.launch {
+                                    dataStoreManager.saveTodos(updatedTodos)
                                 }
                             },
                             onDelete = {
-                                todos = todos.filter { it.id != todo.id }
+                                val updatedTodos = todos.filter { it.id != todo.id }
+                                todos = updatedTodos
+                                scope.launch {
+                                    dataStoreManager.saveTodos(updatedTodos)
+                                }
                             }
                         )
                     }
@@ -159,13 +182,12 @@ fun TodoCard(
     Surface(
         shape = RoundedCornerShape(16.dp),
         shadowElevation = 8.dp,
-        color = if (todo.done) TodoCardDoneBackground else TodoCardBackground, // Usando variáveis
+        color = if (todo.done) TodoCardDoneBackground else TodoCardBackground,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             IconButton(
                 onClick = onToggle,
@@ -174,14 +196,14 @@ fun TodoCard(
                 Icon(
                     imageVector = if (todo.done) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                     contentDescription = if (todo.done) "Desmarcar" else "Marcar como feito",
-                    tint = if (todo.done) IconDoneColor else IconColor, // Usando variáveis
+                    tint = if (todo.done) IconDoneColor else IconColor,
                     modifier = Modifier.size(28.dp)
                 )
             }
             Text(
                 text = todo.text,
                 fontSize = 18.sp,
-                color = if (todo.done) TodoDoneText else TodoText, // Usando variáveis
+                color = if (todo.done) TodoDoneText else TodoText,
                 fontWeight = if (todo.done) FontWeight.Medium else FontWeight.Normal,
                 modifier = Modifier
                     .weight(1f)
@@ -195,7 +217,7 @@ fun TodoCard(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Remover",
-                        tint = DeleteIconColor, // Usando variável
+                        tint = DeleteIconColor,
                     )
                 }
             }
@@ -203,41 +225,34 @@ fun TodoCard(
     }
 }
 
+// Função separada para adicionar todo (não é @Composable)
 fun addTodo(
     text: String,
-    nextId: Int,
-    todos: List<TodoItem>,
+    currentTodos: List<TodoItem>,
+    nextIdToUse: Int,
     onTodosChange: (List<TodoItem>) -> Unit,
+    onInputChange: (TextFieldValue) -> Unit,
     onNextIdChange: (Int) -> Unit,
-    onInputChange: (TextFieldValue) -> Unit
-    ):Unit{
-    println(todos)
-    if(text.isNotEmpty()){
-        onTodosChange(todos + TodoItem(nextId, text))
-        onNextIdChange(nextId + 1)
+    dataStoreManager: DataStoreManager,
+    scope: CoroutineScope
+) {
+    if (text.isNotEmpty()) {
+        val newTodo = TodoItem(nextIdToUse, text)
+        val updatedTodos = currentTodos + newTodo
+        onTodosChange(updatedTodos)
         onInputChange(TextFieldValue(""))
+        onNextIdChange(nextIdToUse + 1)
 
+        scope.launch {
+            dataStoreManager.saveTodos(updatedTodos)
+        }
     }
-//    if (text.isNotEmpty()) {
-//        todos = todos + TodoItem(nextId, text)
-//        nextId++
-//        input = TextFieldValue("")
-//    }
 }
 
-
-fun getDate():String{
+fun getDate(): String {
     val today = LocalDate.now()
     val day = today.dayOfMonth
-    val month = today.month
+    val month = today.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
 
-    return "$day $month"
-}
-
-@Preview
-@Composable
-fun AppPreview() {
-    MaterialTheme {
-        TodoScreen()
-    }
+    return "$day de $month"
 }
